@@ -1,0 +1,22 @@
+# Dépendances
+node_modules/
+
+# Fichiers et variables d'environnement
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+
+# Fichiers de construction et de déploiement
+dist/
+build/
+out/
+
+# Fichiers système d'exploitation et de configuration de l'éditeur
+.DS_Store
+Thumbs.db
+
+# Fichiers de build de test
+coverage/
