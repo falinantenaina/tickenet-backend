@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Acheter un Ticket Internet - Mikrotik</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      header {
+        text-align: center;
+        color: white;
+        margin-bottom: 40px;
+      }
+
+      header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+      }
+
+      .plans-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+      }
+
+      .plan-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 3px solid transparent;
+      }
+
+      .plan-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .plan-card.selected {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+      }
+
+      .plan-duration {
+        font-size: 3em;
+        font-weight: bold;
+        color: #667eea;
+        margin: 10px 0;
+      }
+
+      .plan-price {
+        font-size: 1.8em;
+        color: #333;
+        margin: 15px 0;
+      }
+
+      .form-section {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 20px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 600;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .payment-methods {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-top: 10px;
+      }
+
+      .payment-option {
+        padding: 15px;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .payment-option:hover {
+        border-color: #667eea;
+      }
+
+      .payment-option.selected {
+        border-color: #667eea;
+        background: #667eea10;
+      }
+
+      .payment-option img {
+        height: 40px;
+        margin-bottom: 10px;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      .btn:hover {
+        transform: scale(1.02);
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .result-box {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        display: none;
+      }
+
+      .result-box.success {
+        border: 3px solid #4caf50;
+      }
+
+      .ticket-code {
+        font-size: 2em;
+        font-weight: bold;
+        color: #667eea;
+        margin: 20px 0;
+        padding: 20px;
+        background: #f5f5f5;
+        border-radius: 10px;
+        letter-spacing: 2px;
+      }
+
+      .alert {
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .alert.error {
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #ef5350;
+      }
+
+      .alert.success {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #66bb6a;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🌐 Acheter un Ticket Internet</h1>
+        <p>Choisissez votre plan et connectez-vous instantanément</p>
+      </header>
+
+      <div id="alert" class="alert"></div>
+
+      <div class="plans-grid" id="plansGrid">
+        <!-- Les plans seront chargés ici -->
+      </div>
+
+      <div class="form-section">
+        <h2 style="margin-bottom: 20px; color: #333">
+          Informations de paiement
+        </h2>
+
+        <div class="form-group">
+          <label>Méthode de paiement *</label>
+          <div class="payment-methods">
+            <div class="payment-option" data-method="orange_money">
+              <div style="font-size: 2em">📱</div>
+              <div>Orange Money</div>
+            </div>
+            <div class="payment-option" data-method="mvola">
+              <div style="font-size: 2em">💳</div>
+              <div>MVola</div>
+            </div>
+            <div class="payment-option" data-method="cash">
+              <div style="font-size: 2em">💵</div>
+              <div>Espèces</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group" id="phoneGroup" style="display: none">
+          <label>Numéro de téléphone</label>
+          <input type="tel" id="phoneNumber" placeholder="034 00 000 00" />
+        </div>
+
+        <div class="form-group">
+          <label>Email (optionnel)</label>
+          <input
+            type="email"
+            id="customerEmail"
+            placeholder="votre@email.com"
+          />
+        </div>
+
+        <button class="btn" id="purchaseBtn" disabled>Acheter le ticket</button>
+      </div>
+
+      <div class="result-box" id="resultBox">
+        <h2>✅ Achat réussi !</h2>
+        <p>Voici votre code de connexion :</p>
+        <div class="ticket-code" id="ticketCode"></div>
+        <p style="margin-top: 20px">
+          <strong>Durée :</strong> <span id="ticketDuration"></span><br />
+          <strong>Instructions :</strong>
+        </p>
+        <div
+          style="
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: left;
+          "
+        >
+          <p>1. Connectez-vous au WiFi du hotspot</p>
+          <p>2. Sur la page de connexion Mikrotik :</p>
+          <p style="margin-left: 20px">
+            • Entrez votre code dans le champ <strong>Username</strong>
+          </p>
+          <p style="margin-left: 20px">
+            • Entrez le <strong>même code</strong> dans le champ
+            <strong>Password</strong>
+          </p>
+          <p>3. Cliquez sur "Se connecter"</p>
+        </div>
+        <button
+          class="btn"
+          style="margin-top: 20px"
+          onclick="location.reload()"
+        >
+          Acheter un autre ticket
+        </button>
+      </div>
+    </div>
+
+    <script>
+      let selectedPlan = null;
+      let selectedPayment = null;
+
+      // Charger les plans disponibles
+      async function loadPlans() {
+        try {
+          const response = await fetch("/api/plans");
+          const data = await response.json();
+
+          if (data.success) {
+            const grid = document.getElementById("plansGrid");
+            grid.innerHTML = "";
+
+            data.plans.forEach((plan) => {
+              const card = document.createElement("div");
+              card.className = "plan-card";
+              card.innerHTML = `
+                            <h3>${plan.name}</h3>
+                            <div class="plan-duration">${plan.duration}h</div>
+                            <div class="plan-price">${plan.price} Ar</div>
+                            <p>${plan.description || ""}</p>
+                        `;
+              card.onclick = () => selectPlan(plan, card);
+              grid.appendChild(card);
+            });
+          }
+        } catch (error) {
+          showAlert("Erreur lors du chargement des plans", "error");
+        }
+      }
+
+      function selectPlan(plan, element) {
+        document
+          .querySelectorAll(".plan-card")
+          .forEach((c) => c.classList.remove("selected"));
+        element.classList.add("selected");
+        selectedPlan = plan;
+        checkFormValid();
+      }
+
+      // Gestion des méthodes de paiement
+      document.querySelectorAll(".payment-option").forEach((option) => {
+        option.onclick = function () {
+          document
+            .querySelectorAll(".payment-option")
+            .forEach((o) => o.classList.remove("selected"));
+          this.classList.add("selected");
+          selectedPayment = this.dataset.method;
+
+          // Afficher le champ téléphone si nécessaire
+          const phoneGroup = document.getElementById("phoneGroup");
+          phoneGroup.style.display =
+            selectedPayment !== "cash" ? "block" : "none";
+
+          checkFormValid();
+        };
+      });
+
+      function checkFormValid() {
+        const btn = document.getElementById("purchaseBtn");
+        btn.disabled = !(selectedPlan && selectedPayment);
+      }
+
+      // Acheter le ticket
+      document.getElementById("purchaseBtn").onclick = async function () {
+        this.disabled = true;
+        this.textContent = "Traitement en cours...";
+
+        try {
+          const response = await fetch("/api/tickets/purchase", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              planId: selectedPlan.id,
+              paymentMethod: selectedPayment,
+              phoneNumber: document.getElementById("phoneNumber").value,
+              customerEmail: document.getElementById("customerEmail").value,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            document.querySelector(".form-section").style.display = "none";
+            document.querySelector(".plans-grid").style.display = "none";
+
+            const resultBox = document.getElementById("resultBox");
+            document.getElementById("ticketCode").textContent =
+              data.ticket.code;
+            document.getElementById("ticketDuration").textContent =
+              data.ticket.duration + " heures";
+            resultBox.style.display = "block";
+            resultBox.classList.add("success");
+
+            showAlert("Ticket acheté avec succès !", "success");
+          } else {
+            showAlert(data.message || "Erreur lors de l'achat", "error");
+            this.disabled = false;
+            this.textContent = "Acheter le ticket";
+          }
+        } catch (error) {
+          showAlert("Erreur de connexion au serveur", "error");
+          this.disabled = false;
+          this.textContent = "Acheter le ticket";
+        }
+      };
+
+      function showAlert(message, type) {
+        const alert = document.getElementById("alert");
+        alert.textContent = message;
+        alert.className = `alert ${type}`;
+        alert.style.display = "block";
+        setTimeout(() => (alert.style.display = "none"), 5000);
+      }
+
+      // Charger les plans au démarrage
+      loadPlans();
+    </script>
+  </body>
+</html>
