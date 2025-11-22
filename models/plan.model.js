@@ -34,7 +34,7 @@ export default class Plan {
   }
 
   static async delete(id) {
-    const [result] = await pool.execute("DELETE FROM plan WHERE id = ?", [id]);
+    const [result] = await pool.execute("DELETE FROM plans WHERE id = ?", [id]);
 
     return result.affectedRows;
   }
