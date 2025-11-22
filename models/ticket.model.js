@@ -18,7 +18,7 @@ export default class Ticket {
     return rows[0];
   }
 
-  static async MarkAsSold(ticketId) {
+  static async markAsSold(ticketId) {
     const [result] = await pool.execute(
       "UPDATE tickets SET status = ?, sold_at =  NOW() WHERE id = ?",
       ["sold", ticketId]
