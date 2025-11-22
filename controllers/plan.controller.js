@@ -2,7 +2,7 @@ import Plan from "../models/plan.model.js";
 
 export const getAllPlan = async (req, res) => {
   try {
-    const plans = await Plan.getAllPlan();
+    const plans = await Plan.getAll();
 
     res.json({
       success: true,
@@ -18,10 +18,11 @@ export const getAllPlan = async (req, res) => {
 };
 
 export const createPlan = async (req, res) => {
+  console.log();
   try {
     const { name, duration, price, description } = req.body;
 
-    if (!name || !duration || !price || !description) {
+    if (!name || !duration || !price) {
       return res.status(400).json({
         success: false,
         message: "Nom, durée et prix requis",
@@ -82,6 +83,8 @@ export const deletePlan = async (req, res) => {
   try {
     const { id } = req.params;
     const result = await Plan.delete(id);
+
+    console.log(result);
 
     if (result === 0) {
       return res.status(404).json({
