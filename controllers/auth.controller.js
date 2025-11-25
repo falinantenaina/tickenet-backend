@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 
@@ -13,7 +14,7 @@ export const register = async (req, res) => {
       });
     }
 
-    const existingUser = await User.findByEmail(email);
+    const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return res.status(409).json({
@@ -22,14 +23,20 @@ export const register = async (req, res) => {
       });
     }
 
+    const hashedPassowrd = await bcrypt.hash(password, 10);
+
     // Create User
 
-    const userId = await User.create(username, email, password);
+    const user = await User.create({
+      username,
+      email,
+      password: hashedPassowrd,
+    });
 
     res.status(201).json({
       success: true,
       message: "Compte crée avec succès",
-      userId,
+      userId: user._id,
     });
   } catch (error) {
     console.error("Erreur register:", error);
@@ -53,7 +60,7 @@ export const login = async (req, res) => {
       });
     }
 
-    const user = await User.findByEmail(email);
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(401).json({
@@ -63,7 +70,7 @@ export const login = async (req, res) => {
     }
 
     // check password
-    const isPasswordValid = await User.verifyPassword(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -74,7 +81,7 @@ export const login = async (req, res) => {
 
     // Generate token
     const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
+      { userId: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
@@ -84,7 +91,7 @@ export const login = async (req, res) => {
       message: "Connexion réussie",
       token,
       user: {
-        id: user.id,
+        id: user._id,
         email: user.email,
         username: user.username,
         role: user.role,

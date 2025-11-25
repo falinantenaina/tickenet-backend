@@ -19,7 +19,7 @@ export const purchaseTicket = async (req, res) => {
     }
 
     // Récupérer le plan
-    const plan = await Plan.getById(planId);
+    const plan = await Plan.findById(planId);
 
     if (!plan) {
       return res.status(404).json({
@@ -32,18 +32,18 @@ export const purchaseTicket = async (req, res) => {
     const code = VoucherGenerator.generateCode();
 
     // Créer le ticket
-    const ticketId = await Ticket.create(code, planId);
+    const ticket = await Ticket.create({ code, planId });
 
     // Créer la vente
-    const saleId = await Sale.create(
-      ticketId,
+    const sale = await Sale.create({
+      ticketId: ticket._id,
       planId,
       paymentMethod,
-      plan.price,
-      phoneNumber || null,
-      customerEmail || null,
-      customerPhone || null
-    );
+      amount: plan.price,
+      phoneNumber: phoneNumber || null,
+      customerEmail: customerEmail || null,
+      customerPhone: customerPhone || null,
+    });
 
     // Créer l'utilisateur sur Mikrotik IMMÉDIATEMENT
     const mikrotik = new MikrotikManager();
@@ -63,8 +63,8 @@ export const purchaseTicket = async (req, res) => {
 
     // Si paiement en espèces, marquer comme complété directement
     if (paymentMethod === "cash") {
-      await Sale.updatePaymentStatus(saleId, "completed", "CASH-" + Date.now());
-      await Ticket.markAsSold(ticketId);
+      await Sale.findByIdAndUpdate(sale._id, { paymentStatus: "completed" });
+      await Ticket.findByIdAndUpdate(ticket._id, { status: "sold" });
     }
 
     res.status(201).json({
@@ -76,7 +76,7 @@ export const purchaseTicket = async (req, res) => {
         duration: plan.duration,
         price: plan.price,
       },
-      saleId,
+      saleId: sale._id,
       paymentMethod,
     });
   } catch (error) {

@@ -2,7 +2,7 @@ import Plan from "../models/plan.model.js";
 
 export const getAllPlan = async (req, res) => {
   try {
-    const plans = await Plan.getAll();
+    const plans = await Plan.find().sort({ duration: 1 });
 
     res.json({
       success: true,
@@ -29,7 +29,7 @@ export const createPlan = async (req, res) => {
       });
     }
 
-    const planId = await Plan.create(name, duration, price, description);
+    const planId = await Plan.create({ name, duration, price, description });
 
     res.status(201).json({
       success: true,
@@ -50,16 +50,16 @@ export const updatePlan = async (req, res) => {
     const { id } = req.params;
     const { name, duration, price, description, isActive } = req.body;
 
-    const result = await Plan.update(
+    const result = await Plan.findByIdAndUpdate(id, {
       id,
       name,
       duration,
       price,
       description,
-      isActive
-    );
+      isActive,
+    });
 
-    if (result === 0) {
+    if (!result) {
       return res.status(404).json({
         success: false,
         message: "Plan non trouvé",
@@ -82,11 +82,9 @@ export const updatePlan = async (req, res) => {
 export const deletePlan = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await Plan.delete(id);
+    const result = await Plan.findByIdAndDelete(id);
 
-    console.log(result);
-
-    if (result === 0) {
+    if (!result) {
       return res.status(404).json({
         success: false,
         message: "Plan non trouvé",

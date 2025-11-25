@@ -33,7 +33,9 @@ export const authMiddleware = async (req, res, next) => {
     };
 
     next();
-  } catch (error) {}
+  } catch (error) {
+    next(error);
+  }
 };
 
 // Check admin
