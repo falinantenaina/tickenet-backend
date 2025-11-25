@@ -20,6 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 // Routes API
+import { connectDb } from "./config/database.js";
 import authRoutes from "./routes/auth.route.js";
 import planRoutes from "./routes/plan.route.js";
 import salesRoutes from "./routes/sales.route.js";
@@ -71,6 +72,7 @@ app.use((err, req, res, next) => {
 
 // Démarrer le serveur
 app.listen(PORT, () => {
+  connectDb();
   console.log("=".repeat(50));
   console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
   console.log(`📊 Dashboard admin: http://localhost:${PORT}/admin`);

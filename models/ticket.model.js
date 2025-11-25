@@ -1,38 +1,34 @@
-import pool from "../config/database.js";
+import mongoose from "mongoose";
 
-export default class Ticket {
-  static async create(code, planId) {
-    const [result] = await pool.execute(
-      "INSERT INTO tickets (code, plan_id, status) VALUES (?, ?, ?)",
-      [code, planId, "available"]
-    );
-
-    return result.insertId;
+const ticketSchema = new mongoose.Schema(
+  {
+    code: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    planId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Plan",
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["available", "sold", "used", "expired"],
+      default: "available",
+    },
+    usedAt: {
+      type: Date,
+    },
+    expiresAt: {
+      type: Date,
+    },
+  },
+  {
+    timestamps: true,
   }
+);
 
-  static async findByCode(code) {
-    const [rows] = await pool.execute("SELECT * FROM tickets WHERE code = ?", [
-      code,
-    ]);
+const Ticket = mongoose.model("Ticket", ticketSchema);
 
-    return rows[0];
-  }
-
-  static async markAsSold(ticketId) {
-    const [result] = await pool.execute(
-      "UPDATE tickets SET status = ?, sold_at =  NOW() WHERE id = ?",
-      ["sold", ticketId]
-    );
-
-    return result.affectedRows;
-  }
-
-  static async getAvailableByPlan(planId) {
-    const [rows] = await pool.execute(
-      "SELECT * FROM tickets WHERE plan_id = ? AND status = ? LIMIT 1",
-      [planId, "availabe"]
-    );
-
-    return rows[0];
-  }
-}
+export default Ticket;

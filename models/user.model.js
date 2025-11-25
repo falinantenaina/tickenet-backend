@@ -1,33 +1,54 @@
 import bcrypt from "bcryptjs";
-import pool from "../config/database.js";
+import mongoose from "mongoose";
 
-export default class User {
-  static async create(username, email, password, role = "admin") {
-    const hashedPassword = await bcrypt.hash(password, 10);
+const userSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      unique: true,
+      required: [true, "The username is required"],
+      uppercase: true,
+    },
+    email: {
+      type: String,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      required: true,
+    },
+    password: {
+      type: String,
+      require: true,
+    },
+    role: {
+      type: String,
+      enum: ["admin", "user"],
+      default: "user",
+    },
+  },
+  { timestamps: true }
+);
 
-    const [result] = await pool.execute(
-      "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)",
-      [username, email, hashedPassword, role]
-    );
+userSchema.pre("save", async function (next) {
+  const user = this;
 
-    return result.insertId;
+  if (!user.isModified("password")) {
+    return next();
   }
 
-  static async findByEmail(email) {
-    const [rows] = await pool.execute("SELECT * FROM users WHERE email = ?", [
-      email,
-    ]);
-
-    return rows[0];
+  try {
+    const hash = await bcrypt.hash(user.password, 10);
+    user.password = hash;
+    next();
+  } catch (error) {
+    next(error);
   }
+});
 
-  static async findById(id) {
-    const [rows] = await pool.execute("SELECT * FROM users WHERE id = ?", [id]);
+userSchema.methods.comparePassword = async function (password) {
+  return bcrypt.compare(password, this.password);
+};
 
-    return rows[0];
-  }
+const User = mongoose.model("User", userSchema);
 
-  static async verifyPassword(plainPassword, hashedPassword) {
-    return await bcrypt.compare(plainPassword, hashedPassword);
-  }
-}
+export default User;
