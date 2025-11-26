@@ -1,12 +1,11 @@
 // server.js
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import path from "path";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.resolve();
 
 dotenv.config();
 
@@ -14,15 +13,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors({
-  origin: ["http://localhost:5173"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
-
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://itad-wifi.vercel.app"],
+    credentials: true,
+  })
+);
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static("public"));
 
 // Routes API
 import { connectDb } from "./config/database.js";
@@ -36,19 +35,6 @@ app.use("/api/plans", planRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/sales", salesRoutes);
 
-// Routes pour servir les pages HTML
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-app.get("/admin", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "admin-dashboard.html"));
-});
-
-app.get("/buy", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "buy-ticket.html"));
-});
-
 // Route de test
 app.get("/api/health", (req, res) => {
   res.json({
@@ -57,6 +43,15 @@ app.get("/api/health", (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+if (process.env.NODE_ENV === "production") {
+  const frontendPath = path.join(__dirname, "../frontend/dist");
+  app.use(express.static(frontendPath));
+
+  app.get("{*any}", (req, res) => {
+    res.sendFile(path.join(frontendPath, "index.html"));
+  });
+}
 
 // Gestion des erreurs 404
 app.use((req, res) => {
@@ -75,12 +70,14 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Démarrer le serveur
-app.listen(PORT, () => {
-  connectDb();
-  console.log("=".repeat(50));
-  console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
-  console.log(`📊 Dashboard admin: http://localhost:${PORT}/admin`);
-  console.log(`🎫 Achat tickets: http://localhost:${PORT}/buy`);
-  console.log("=".repeat(50));
-});
+(async () => {
+  try {
+    await connectDb(); //
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to connect to DB:", error);
+    process.exit(1);
+  }
+})();
