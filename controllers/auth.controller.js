@@ -1,12 +1,11 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { generateTokenAndSetCookie } from "../config/generateTokenAndSetCookie.js";
 import User from "../models/user.model.js";
 
 export const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    //valiation
     if (!username || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -25,13 +24,13 @@ export const register = async (req, res) => {
 
     const hashedPassowrd = await bcrypt.hash(password, 10);
 
-    // Create User
-
     const user = await User.create({
       username,
       email,
       password: hashedPassowrd,
     });
+
+    generateTokenAndSetCookie(user._id, res);
 
     res.status(201).json({
       success: true,
@@ -52,7 +51,6 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validation
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -69,8 +67,7 @@ export const login = async (req, res) => {
       });
     }
 
-    // check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -79,12 +76,7 @@ export const login = async (req, res) => {
       });
     }
 
-    // Generate token
-    const token = jwt.sign(
-      { userId: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" }
-    );
+    generateTokenAndSetCookie(user._id, res);
 
     res.json({
       success: true,
