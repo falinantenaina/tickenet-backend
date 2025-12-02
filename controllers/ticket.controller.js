@@ -45,6 +45,12 @@ export const purchaseTicket = async (req, res) => {
       customerPhone: customerPhone || null,
     });
 
+    // Si paiement en espèces, marquer comme complété directement
+    if (paymentMethod === "cash") {
+      await Sale.findByIdAndUpdate(sale._id, { paymentStatus: "completed" });
+      await Ticket.findByIdAndUpdate(ticket._id, { status: "sold" });
+    }
+
     // Créer l'utilisateur sur Mikrotik IMMÉDIATEMENT
     const mikrotik = new MikrotikManager();
     let mikrotikSuccess = false;
@@ -59,12 +65,6 @@ export const purchaseTicket = async (req, res) => {
     } catch (error) {
       console.error("❌ Erreur Mikrotik:", error.message);
       // On continue quand même, mais on note l'erreur
-    }
-
-    // Si paiement en espèces, marquer comme complété directement
-    if (paymentMethod === "cash") {
-      await Sale.findByIdAndUpdate(sale._id, { paymentStatus: "completed" });
-      await Ticket.findByIdAndUpdate(ticket._id, { status: "sold" });
     }
 
     res.status(201).json({
