@@ -96,3 +96,26 @@ export const login = async (req, res) => {
     });
   }
 };
+
+export const getProfil = async (req, res) => {
+  try {
+    const user = req.user;
+
+    res.json({
+      success: true,
+      message: "Connexion réussie",
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Erreur getProfil:", error);
+    res.status(500).json({
+      success: false,
+      message: "Erreur serveur",
+    });
+  }
+};
