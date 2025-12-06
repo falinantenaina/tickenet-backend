@@ -43,7 +43,7 @@ export const isAdmin = (req, res, next) => {
   if (req.user.role !== "admin") {
     return res.status(403).json({
       success: false,
-      message: "Accès refusé. Droits administrateur requis.",
+      message: "Accès refusé. Droits d'administrateur requis.",
     });
   }
 
