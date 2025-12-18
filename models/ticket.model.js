@@ -12,6 +12,11 @@ const ticketSchema = new mongoose.Schema(
       ref: "Plan",
       required: true,
     },
+    pointOfSaleId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PointOfSale",
+      required: true,
+    },
     status: {
       type: String,
       enum: ["available", "sold", "used", "expired"],
