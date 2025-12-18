@@ -1,13 +1,12 @@
 import express from "express";
 import {
   getSalesHistory,
-  getSalesStats,
+  getSaleStats,
 } from "../controllers/sale.controller.js";
-import { authMiddleware, isAdmin } from "../middleware/auth.middleware.js";
 const router = express.Router();
 
 // Routes protégées (admin seulement)
-router.get("/stats", authMiddleware, isAdmin, getSalesStats);
-router.get("/history", authMiddleware, isAdmin, getSalesHistory);
+router.get("/stats", getSaleStats);
+router.get("/history", getSalesHistory);
 
 export default router;

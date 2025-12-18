@@ -5,8 +5,6 @@ export const authMiddleware = async (req, res, next) => {
   try {
     const token = req.cookies.token;
 
-    console.log(token);
-
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -40,6 +38,7 @@ export const authMiddleware = async (req, res, next) => {
 };
 
 export const isAdmin = (req, res, next) => {
+  console.log("here", req.user);
   if (req.user.role !== "admin") {
     return res.status(403).json({
       success: false,
