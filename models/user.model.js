@@ -21,8 +21,19 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "user"],
-      default: "user",
+      enum: ["super_admin", "cashier"],
+      default: "cashier",
+    },
+    pointOfSaleId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PointOfSale",
+      required: function () {
+        return this.role === "cashier";
+      },
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }
