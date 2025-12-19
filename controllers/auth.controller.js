@@ -47,6 +47,7 @@ export const register = async (req, res) => {
     const user = await User.create({
       username,
       email,
+      role,
       password: hashedPassowrd,
       pointOfSaleId: role === "cashier" ? pointOfSaleId : undefined,
     });
@@ -65,7 +66,7 @@ export const register = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Erreur register:", error);
+    console.error("Erreur register:", error.message || error);
 
     res.status(500).json({
       success: false,
@@ -107,7 +108,7 @@ export const login = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Connexion réussie",
+      message: "Connexion réussi",
       user: {
         id: user._id,
         email: user.email,
@@ -161,7 +162,7 @@ export const getProfil = async (req, res) => {
     console.error("Erreur getProfil:", error);
     res.status(500).json({
       success: false,
-      message: "Erreur serveur",
+      message: "Erreur serveur getProfil",
     });
   }
 };

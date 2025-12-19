@@ -4,7 +4,6 @@ const userSchema = new mongoose.Schema(
   {
     username: {
       type: String,
-      unique: true,
       required: [true, "The username is required"],
       uppercase: true,
     },
@@ -27,9 +26,6 @@ const userSchema = new mongoose.Schema(
     pointOfSaleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "PointOfSale",
-      required: function () {
-        return this.role === "cashier";
-      },
     },
     isActive: {
       type: Boolean,

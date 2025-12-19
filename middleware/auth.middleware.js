@@ -14,7 +14,7 @@ export const authMiddleware = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.userId).populate("PointOfSaleId");
+    const user = await User.findById(decoded.userId).populate("pointOfSaleId");
 
     if (!user) {
       return res.status(401).json({
@@ -47,18 +47,6 @@ export const authMiddleware = async (req, res, next) => {
       message: "Token invalide",
     });
   }
-};
-
-export const isAdmin = (req, res, next) => {
-  console.log("here", req.user);
-  if (req.user.role !== "admin") {
-    return res.status(403).json({
-      success: false,
-      message: "Accès refusé. Droits d'administrateur requis.",
-    });
-  }
-
-  next();
 };
 
 export const isSuperAdmin = (req, res, next) => {
