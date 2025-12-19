@@ -1,4 +1,3 @@
-// server.js
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -25,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes API
 import { connectDb } from "./config/database.js";
 import authRoutes from "./routes/auth.route.js";
+import cashierRoutes from "./routes/cashier.route.js";
 import planRoutes from "./routes/plan.route.js";
 import posRoutes from "./routes/pos.route.js";
 import salesRoutes from "./routes/sales.route.js";
@@ -32,18 +32,10 @@ import ticketRoutes from "./routes/tickets.route.js";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/pos", posRoutes);
+app.use("/api/cashier", cashierRoutes);
 app.use("/api/plans", planRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/sales", salesRoutes);
-
-// Route de test
-app.get("/api/health", (req, res) => {
-  res.json({
-    success: true,
-    message: "Serveur en ligne",
-    timestamp: new Date().toISOString(),
-  });
-});
 
 if (process.env.NODE_ENV === "production") {
   const frontendPath = path.join(__dirname, "../frontend/dist");
@@ -54,7 +46,7 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// Gestion des erreurs 404
+// Error 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -62,7 +54,7 @@ app.use((req, res) => {
   });
 });
 
-// Gestion globale des erreurs
+// Global error handler
 app.use((err, req, res, next) => {
   console.error("Erreur serveur:", err);
   res.status(500).json({
