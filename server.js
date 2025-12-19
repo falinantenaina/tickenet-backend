@@ -26,10 +26,12 @@ app.use(express.urlencoded({ extended: true }));
 import { connectDb } from "./config/database.js";
 import authRoutes from "./routes/auth.route.js";
 import planRoutes from "./routes/plan.route.js";
+import posRoutes from "./routes/pos.route.js";
 import salesRoutes from "./routes/sales.route.js";
 import ticketRoutes from "./routes/tickets.route.js";
 
 app.use("/api/auth", authRoutes);
+app.use("/api/pos", posRoutes);
 app.use("/api/plans", planRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/sales", salesRoutes);
