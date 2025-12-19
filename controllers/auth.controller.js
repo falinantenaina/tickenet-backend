@@ -1,16 +1,36 @@
 import bcrypt from "bcryptjs";
 import { generateTokenAndSetCookie } from "../config/generateTokenAndSetCookie.js";
+import PointOfSale from "../models/pos.model.js";
 import User from "../models/user.model.js";
 
 export const register = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, role, PointOfSaleId } = req.body;
 
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !role) {
       return res.status(400).json({
         success: false,
         message: "Tous les champs sont requis",
       });
+    }
+
+    //Check cashier has a pos
+    if (role === "cashier" && !PointOfSaleId) {
+      return res.status(400).json({
+        success: false,
+        message: "Un point de vente doit être assigné au caissier",
+      });
+    }
+
+    //Check if pos exist
+    if (PointOfSaleId) {
+      const pos = await PointOfSale.findById(PointOfSaleId);
+      if (!pos) {
+        return res.status(400).json({
+          success: false,
+          message: "Point de vente non trouvé",
+        });
+      }
     }
 
     const existingUser = await User.findOne({ email });
@@ -28,6 +48,7 @@ export const register = async (req, res) => {
       username,
       email,
       password: hashedPassowrd,
+      pointOfSaleId: role === "cashier" ? pointOfSaleId : undefined,
     });
 
     generateTokenAndSetCookie(user._id, res);
@@ -35,7 +56,13 @@ export const register = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Compte crée avec succès",
-      userId: user._id,
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        pointOfSaleId: user.pointOfSaleId,
+      },
     });
   } catch (error) {
     console.error("Erreur register:", error);
@@ -58,7 +85,7 @@ export const login = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate("pointOfSaleId");
 
     if (!user) {
       return res.status(401).json({
@@ -86,6 +113,9 @@ export const login = async (req, res) => {
         email: user.email,
         username: user.username,
         role: user.role,
+        pointOfSaleId: user.pointOfSaleId?.id,
+        pointOfSaleName: user.pointOfSaleId?.name,
+        mikrotikConfig: user.pointOfSaleId?.mikrotikConfig,
       },
     });
   } catch (error) {
@@ -104,16 +134,27 @@ export const logout = async (req, res) => {
 
 export const getProfil = async (req, res) => {
   try {
-    const user = req.user;
+    const user = await User.findById(req.user.id)
+      .populate("pointOfSaleId")
+      .select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Utilisateur non trouvé",
+      });
+    }
 
     res.json({
       success: true,
-      message: "Connexion réussie",
       user: {
         id: user._id,
         email: user.email,
         username: user.username,
         role: user.role,
+        pointOfSaleId: user.pointOfSaleId?._id,
+        pointOfSaleName: user.pointOfSaleId?.name,
+        mikrotikConfig: user.pointOfSaleId?.mikrotikConfig,
       },
     });
   } catch (error) {
