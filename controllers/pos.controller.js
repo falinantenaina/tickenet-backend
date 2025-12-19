@@ -25,7 +25,7 @@ export const createPointOfSale = async (req, res) => {
       PointOfSale: pos,
     });
   } catch (error) {
-    console.error("Erreur createPointOfSale:", error);
+    console.error("Erreur createPointOfSale:", error.message || error);
     res.status(500).json({
       success: false,
       message: "Erreur lors de la création du point de vente",
@@ -35,14 +35,14 @@ export const createPointOfSale = async (req, res) => {
 
 export const getAllPointOfSale = async (req, res) => {
   try {
-    const pointsOfSale = (await PointOfSale.find()).toSorted({ createdAt: -1 });
+    const pointsOfSales = await PointOfSale.find().sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      PointOfSale,
+      pointsOfSales,
     });
   } catch (error) {
-    console.error("Erreur getAllPointsOfSale:", error);
+    console.error("Erreur getAllPointsOfSale:", error.message || error);
     res.status(500).json({
       success: false,
       message: "Erreur lors de la récupération des points de vente",
