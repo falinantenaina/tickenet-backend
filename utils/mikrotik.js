@@ -1,10 +1,18 @@
 import { RouterOSAPI } from "node-routeros";
 
 export default class MikrotikManager {
-  constructor() {
-    this.host = process.env.MIKROTIK_HOST || "192.168.56.2";
-    this.user = process.env.MIKROTIK_USER || "admin";
-    this.password = process.env.MIKROTIK_PASSWORD || "yuiop";
+  constructor(config = null) {
+    if(config) {
+      this.host = config.host
+      this.user = config.user
+      this.password = config.password
+      this.port = Int(config.port) || 8728
+    } else {
+      this.host = process.env.MIKROTIK_HOST || "192.168.56.2";
+      this.user = process.env.MIKROTIK_USER || "admin";
+      this.password = process.env.MIKROTIK_PASSWORD || "yuiop";
+      this.port = 8728;
+    }
   }
 
   // Créer une connexion au Mikrotik
@@ -15,10 +23,10 @@ export default class MikrotikManager {
         user: this.user,
         password: this.password,
         timeout: 10, // Augmenté à 10 secondes
-        port: 8728, // Port API explicite
+        port: this.port, // Port API explicite
       });
 
-      console.log(`Tentative de connexion à ${this.host}:8728...`);
+      console.log(`Tentative de connexion à ${this.host}:${this.port}...`);
       await api.connect();
       console.log("✅ Connexion Mikrotik réussie");
       return api;
@@ -26,9 +34,6 @@ export default class MikrotikManager {
       console.error("❌ Erreur de connexion Mikrotik:", error);
       console.error("Vérifiez:");
       console.error("1. L'IP du Mikrotik:", this.host);
-      console.error("2. L'API est activée (IP > Services > api)");
-      console.error("3. Le firewall n'est pas bloquant");
-      console.error("4. Les identifiants sont corrects");
       throw new Error("Impossible de se connecter au routeur Mikrotik");
     }
   }
@@ -100,23 +105,5 @@ export default class MikrotikManager {
       console.error("Erreur suppression utilisateur:", error);
       throw error;
     }
-  }
-
-  // Version simplifiée sans la librairie node-routeros
-  // (À utiliser si vous ne pouvez pas installer node-routeros)
-  async createUserSimple(code, duration) {
-    // Cette fonction est un placeholder
-    // Dans un environnement réel, vous devriez utiliser l'API Mikrotik
-    // ou configurer les vouchers directement dans Mikrotik
-
-    console.log(`Code d'accès créé: ${code}, durée: ${duration}h`);
-    console.log(`Sur Mikrotik, l'utilisateur devra entrer: ${code}`);
-    console.log(`(username: ${code}, password: ${code})`);
-
-    return {
-      success: true,
-      code: code,
-      duration: `${duration}h`,
-    };
   }
 }
