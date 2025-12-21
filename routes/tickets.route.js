@@ -3,12 +3,11 @@ import {
   purchaseTicket,
   verifyTicket,
 } from "../controllers/ticket.controller.js";
-import { authMiddleware, isCashier } from "../middleware/auth.middleware.js";
+import { authMiddleware, isAutorized } from "../middleware/auth.middleware.js";
 const router = express.Router();
 
-router.use(authMiddleware, isCashier);
 
-router.post("/purchase", purchaseTicket);
+router.post("/purchase", authMiddleware, isAutorized, purchaseTicket);
 
 router.get("/verify/:code", verifyTicket);
 
