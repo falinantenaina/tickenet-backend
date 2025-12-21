@@ -5,16 +5,16 @@ import {
   getAllPlan,
   updatePlan,
 } from "../controllers/plan.controller.js";
-import { authMiddleware, isAdmin } from "../middleware/auth.middleware.js";
+import { authMiddleware, isSuperAdmin } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-// Routes publiques
 router.get("/", getAllPlan);
 
-// Routes protégées (admin seulement)
-router.post("/", authMiddleware, isAdmin, createPlan);
-router.put("/:id", authMiddleware, isAdmin, updatePlan);
-router.delete("/:id", authMiddleware, isAdmin, deletePlan);
+router.use(authMiddleware, isSuperAdmin)
+
+router.post("/", createPlan);
+router.put("/:id", updatePlan);
+router.delete("/:id", deletePlan);
 
 export default router;
