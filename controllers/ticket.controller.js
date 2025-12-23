@@ -6,7 +6,6 @@ import MikrotikManager from "../utils/mikrotik.js";
 import VoucherGenerator from "../utils/voucher.js";
 
 export const purchaseTicket = async (req, res) => {
-  console.log(req.user);
   try {
     const { planId, paymentMethod, phoneNumber, customerEmail, customerPhone } =
       req.body;
@@ -77,21 +76,6 @@ export const purchaseTicket = async (req, res) => {
       }
     }
 
-    /* // Créer l'utilisateur sur Mikrotik IMMÉDIATEMENT
-    const mikrotik = new MikrotikManager();
-    let mikrotikSuccess = false;
-
-    try {
-      console.log(
-        `🔄 Création du code ${code} sur Mikrotik pour ${plan.duration}h...`
-      );
-      const result = await mikrotik.createHotspotUser(code, plan.duration);
-      mikrotikSuccess = true;
-      console.log("✅ Code créé sur Mikrotik:", result);
-    } catch (error) {
-      console.error("❌ Erreur Mikrotik:", error.message);
-      // On continue quand même, mais on note l'erreur
-    } */
 
     res.status(201).json({
       success: true,

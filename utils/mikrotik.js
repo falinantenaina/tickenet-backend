@@ -6,7 +6,7 @@ export default class MikrotikManager {
       this.host = config.host
       this.user = config.user
       this.password = config.password
-      this.port = Int(config.port) || 8728
+      this.port = config.port|| 8728
     } else {
       this.host = process.env.MIKROTIK_HOST || "192.168.56.2";
       this.user = process.env.MIKROTIK_USER || "admin";
@@ -22,8 +22,8 @@ export default class MikrotikManager {
         host: this.host,
         user: this.user,
         password: this.password,
-        timeout: 10, // Augmenté à 10 secondes
-        port: this.port, // Port API explicite
+        timeout: 10, 
+        port: this.port,
       });
 
       console.log(`Tentative de connexion à ${this.host}:${this.port}...`);
@@ -31,9 +31,7 @@ export default class MikrotikManager {
       console.log("✅ Connexion Mikrotik réussie");
       return api;
     } catch (error) {
-      console.error("❌ Erreur de connexion Mikrotik:", error);
-      console.error("Vérifiez:");
-      console.error("1. L'IP du Mikrotik:", this.host);
+      console.error(error)
       throw new Error("Impossible de se connecter au routeur Mikrotik");
     }
   }
