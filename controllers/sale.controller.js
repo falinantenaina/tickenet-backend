@@ -1,5 +1,10 @@
+// controllers/sale.controller.js
+import mongoose from "mongoose";
 import Sale from "../models/sale.model.js";
 
+/**
+ * Récupère les statistiques des ventes selon différentes périodes
+ */
 export const getSaleStats = async (req, res) => {
   try {
     const {
@@ -16,23 +21,32 @@ export const getSaleStats = async (req, res) => {
     let groupByFormat = "";
     const now = new Date();
 
+    // Filtrage par rôle
     if (user.role === "cashier") {
-      matchCondition.pointOfSaleId = user.pointOfSaleId;
-      matchCondition.cashierId = user.id;
+      matchCondition.pointOfSaleId = new mongoose.Types.ObjectId(
+        user.pointOfSaleId
+      );
+      matchCondition.cashierId = new mongoose.Types.ObjectId(user.id);
     } else if (user.role === "super_admin") {
-      if (pointOfSaleId) {
-        matchCondition.pointOfSaleId = pointOfSaleId;
+      // Filtres optionnels pour super admin
+      if (pointOfSaleId && pointOfSaleId !== "") {
+        matchCondition.pointOfSaleId = new mongoose.Types.ObjectId(
+          pointOfSaleId
+        );
       }
-      if (cashierId) {
-        matchCondition.cashierId = cashierId;
+      if (cashierId && cashierId !== "") {
+        matchCondition.cashierId = new mongoose.Types.ObjectId(cashierId);
       }
     }
 
+    // Gestion des périodes
     switch (period) {
       case "day":
         const targetDate = date ? new Date(date) : now;
-        const dayStart = new Date(targetDate.setHours(0, 0, 0, 0));
-        const dayEnd = new Date(targetDate.setHours(23, 59, 59, 999));
+        const dayStart = new Date(targetDate);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(targetDate);
+        dayEnd.setHours(23, 59, 59, 999);
 
         matchCondition.createdAt = { $gte: dayStart, $lte: dayEnd };
         groupByFormat = {
@@ -49,14 +63,13 @@ export const getSaleStats = async (req, res) => {
         weekEnd.setDate(weekStart.getDate() + 6);
         weekEnd.setHours(23, 59, 59, 999);
 
-        (matchCondition.createdAt = { $gte: weekStart, $lte: weekEnd }),
-          (groupByFormat = {
-            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
-          });
+        matchCondition.createdAt = { $gte: weekStart, $lte: weekEnd };
+        groupByFormat = {
+          $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+        };
         break;
 
       case "month":
-        // Statistiques du mois en cours
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         const monthEnd = new Date(
           now.getFullYear(),
@@ -68,14 +81,13 @@ export const getSaleStats = async (req, res) => {
           999
         );
 
-        (matchCondition.createdAt = { $gte: monthStart, $lte: monthEnd }),
-          (groupByFormat = {
-            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
-          });
+        matchCondition.createdAt = { $gte: monthStart, $lte: monthEnd };
+        groupByFormat = {
+          $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+        };
         break;
 
       case "custom":
-        // Statistiques pour une période personnalisée
         if (!startDate || !endDate) {
           return res.status(400).json({
             success: false,
@@ -90,10 +102,10 @@ export const getSaleStats = async (req, res) => {
         const customEnd = new Date(endDate);
         customEnd.setHours(23, 59, 59, 999);
 
-        (matchCondition.createdAt = { $gte: customStart, $lte: customEnd }),
-          (groupByFormat = {
-            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
-          });
+        matchCondition.createdAt = { $gte: customStart, $lte: customEnd };
+        groupByFormat = {
+          $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+        };
         break;
 
       default:
@@ -104,7 +116,9 @@ export const getSaleStats = async (req, res) => {
         });
     }
 
-    // Agrégation pour obtenir les statistiques
+    console.log("Match condition:", JSON.stringify(matchCondition, null, 2));
+
+    // Agrégation pour obtenir les statistiques temporelles
     const stats = await Sale.aggregate([
       { $match: matchCondition },
       {
@@ -164,9 +178,15 @@ export const getSaleStats = async (req, res) => {
       },
     ]);
 
+    console.log("Summary result:", summary);
+
     return res.status(200).json({
       success: true,
       period,
+      filters: {
+        pointOfSaleId: pointOfSaleId || null,
+        cashierId: cashierId || null,
+      },
       dateRange: matchCondition.createdAt,
       summary: summary[0] || {
         totalSales: 0,
@@ -190,24 +210,29 @@ export const getSaleStats = async (req, res) => {
 
 export const getSalesHistory = async (req, res) => {
   try {
-    const { pointOfSaleId, cashierId } = req.query;
+    const { limit = 50, offset = 0, pointOfSaleId, cashierId } = req.query;
     const user = req.user;
-    const limit = parseInt(req.query.limit) || 50;
-    const offset = parseInt(req.query.offset) || 0;
 
     let matchCondition = {};
 
+    // Filtrage par rôle
     if (user.role === "cashier") {
-      matchCondition.pointOfSaleId = user.pointOfSaleId;
-      matchCondition.cashierId = user.id;
+      matchCondition.pointOfSaleId = new mongoose.Types.ObjectId(
+        user.pointOfSaleId
+      );
+      matchCondition.cashierId = new mongoose.Types.ObjectId(user.id);
     } else if (user.role === "super_admin") {
-      if (pointOfSaleId) {
-        matchCondition.pointOfSaleId = pointOfSaleId;
+      if (pointOfSaleId && pointOfSaleId !== "") {
+        matchCondition.pointOfSaleId = new mongoose.Types.ObjectId(
+          pointOfSaleId
+        );
       }
-      if (cashierId) {
-        matchCondition.cashierId = cashierId;
+      if (cashierId && cashierId !== "") {
+        matchCondition.cashierId = new mongoose.Types.ObjectId(cashierId);
       }
     }
+
+    console.log("Sales history match condition:", matchCondition);
 
     const sales = await Sale.find(matchCondition)
       .populate("ticketId")
@@ -239,9 +264,11 @@ export const getSalesHistory = async (req, res) => {
   }
 };
 
+// Statistiques par caissier (pour super admin)
 export const getCashierStats = async (req, res) => {
   try {
     const { cashierId, period = "day", startDate, endDate } = req.query;
+
     if (!cashierId) {
       return res.status(400).json({
         success: false,
@@ -249,47 +276,50 @@ export const getCashierStats = async (req, res) => {
       });
     }
 
-    let matchCondition = { cashierId };
+    let matchCondition = {
+      cashierId: new mongoose.Types.ObjectId(cashierId),
+    };
     const now = new Date();
 
     switch (period) {
       case "day":
-        matchCondition.createdAt = {
-          $gte: new Date(now.setHours(0, 0, 0, 0)),
-          $lte: new Date(now.setHours(23, 59, 59, 999)),
-        };
+        const dayStart = new Date(now);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(now);
+        dayEnd.setHours(23, 59, 59, 999);
+        matchCondition.createdAt = { $gte: dayStart, $lte: dayEnd };
         break;
       case "week":
         const weekStart = new Date(now);
         weekStart.setDate(now.getDate() - now.getDay());
-        matchCondition.createdAt = {
-          $gte: weekStart,
-          $lte: new Date(),
-        };
+        weekStart.setHours(0, 0, 0, 0);
+        const weekEnd = new Date();
+        matchCondition.createdAt = { $gte: weekStart, $lte: weekEnd };
         break;
       case "month":
-        matchCondition.createdAt = {
-          $gte: new Date(now.getFullYear(), now.getMonth(), 1),
-          $lte: new Date(
-            now.getFullYear(),
-            now.getMonth() + 1,
-            0,
-            23,
-            59,
-            59,
-            999
-          ),
-        };
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthEnd = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+          999
+        );
+        matchCondition.createdAt = { $gte: monthStart, $lte: monthEnd };
         break;
       case "custom":
         if (startDate && endDate) {
-          matchCondition.createdAt = {
-            $gte: new Date(startDate),
-            $lte: new Date(endDate),
-          };
+          const customStart = new Date(startDate);
+          customStart.setHours(0, 0, 0, 0);
+          const customEnd = new Date(endDate);
+          customEnd.setHours(23, 59, 59, 999);
+          matchCondition.createdAt = { $gte: customStart, $lte: customEnd };
         }
         break;
     }
+
     const stats = await Sale.aggregate([
       { $match: matchCondition },
       {
